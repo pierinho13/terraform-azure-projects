@@ -31,11 +31,40 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
+resource "azurerm_public_ip" "webapp_outbound_ip" {
+  name                = "webapp-outbound-ip"
+  resource_group_name = azurerm_resource_group.webapp.name
+  location            = azurerm_resource_group.webapp.location
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = ["1"]
+}
+
+resource "azurerm_nat_gateway" "azure_nat_gateway" {
+  name                = "nat-gateway"
+  location            = azurerm_resource_group.webapp.location
+  resource_group_name = azurerm_resource_group.webapp.name
+  sku_name            = "Standard"
+  zones               = ["1"]
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "nat_public_ip_association" {
+  nat_gateway_id       = azurerm_nat_gateway.azure_nat_gateway.id
+  public_ip_address_id = azurerm_public_ip.webapp_outbound_ip.id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "gateway_association_subnet" {
+  subnet_id      = azurerm_subnet.subnet.id
+  nat_gateway_id = azurerm_nat_gateway.azure_nat_gateway.id
+}
+
+
 resource "azurerm_public_ip" "webapp_ip" {
   name                = "webapp-first"
   location            = azurerm_resource_group.webapp.location
   resource_group_name = azurerm_resource_group.webapp.name
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 resource "azurerm_network_security_group" "ssh_security_group" {
@@ -70,7 +99,7 @@ resource "azurerm_network_interface" "webapp_interface" {
   name                = "webapp-interface-nic"
   resource_group_name = azurerm_resource_group.webapp.name
   location            = azurerm_resource_group.webapp.location
-  
+
 
   ip_configuration {
     name                          = "internal"
@@ -92,12 +121,12 @@ resource "azurerm_linux_virtual_machine" "webappp_instance" {
     azurerm_network_interface.webapp_interface.id,
   ]
 
-#   source_image_reference {
-#     publisher = "Canonical"
-#     offer     = "UbuntuServer"
-#     sku       = "18.04-LTS"
-#     version   = "latest"
-#   }
+  #   source_image_reference {
+  #     publisher = "Canonical"
+  #     offer     = "UbuntuServer"
+  #     sku       = "18.04-LTS"
+  #     version   = "latest"
+  #   }
 
   #source image: https://github.com/pierinho13/packer-azure-simpliest/tree/main
   source_image_id = data.azurerm_image.nginx.id
