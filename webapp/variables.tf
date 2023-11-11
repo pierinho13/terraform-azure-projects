@@ -18,3 +18,7 @@ variable "arm_tenant_id" {
 variable "location_webapp" {
   type = string
 }
+
+variable "password_instance" {
+  type = string
+}

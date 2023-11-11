@@ -20,9 +20,54 @@ resource "azurerm_virtual_network" "vpc" {
   resource_group_name = azurerm_resource_group.webapp.name
 }
 
-resource "azurerm_subnet" "example" {
+resource "azurerm_subnet" "subnet" {
   name                 = "webapp-subnet"
   resource_group_name  = azurerm_resource_group.webapp.name
   virtual_network_name = azurerm_virtual_network.vpc.name
   address_prefixes     = ["10.0.1.0/24"]
+}
+
+resource "azurerm_public_ip" "webapp_ip" {
+  name                = "webapp-first"
+  location            = azurerm_resource_group.webapp.location
+  resource_group_name = azurerm_resource_group.webapp.name
+  allocation_method   = "Dynamic"
+}
+
+resource "azurerm_network_interface" "webapp_interface" {
+  name                = "webapp-interface-nic"
+  resource_group_name = azurerm_resource_group.webapp.name
+  location            = azurerm_resource_group.webapp.location
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.subnet.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.webapp_ip.id
+  }
+}
+
+resource "azurerm_linux_virtual_machine" "webappp_instance" {
+  name                            = "webapp-vm"
+  resource_group_name             = azurerm_resource_group.webapp.name
+  location                        = var.location_webapp
+  size                            = "Standard_D2s_v3"
+  admin_username                  = "adminuser"
+  admin_password                  = var.password_instance
+  disable_password_authentication = false
+  network_interface_ids = [
+    azurerm_network_interface.webapp_interface.id,
+  ]
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "18.04-LTS"
+    version   = "latest"
+  }
+
+  os_disk {
+    storage_account_type = "Standard_LRS"
+    caching              = "ReadWrite"
+  }
 }
