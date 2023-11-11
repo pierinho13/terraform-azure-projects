@@ -38,10 +38,39 @@ resource "azurerm_public_ip" "webapp_ip" {
   allocation_method   = "Dynamic"
 }
 
+resource "azurerm_network_security_group" "ssh_security_group" {
+  name                = "ssh-security-group"
+  location            = azurerm_resource_group.webapp.location
+  resource_group_name = azurerm_resource_group.webapp.name
+
+  security_rule {
+    name                       = "ssh-security-group"
+    priority                   = 1000
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_network_interface_security_group_association" "security_asociation" {
+  network_interface_id      = azurerm_network_interface.webapp_interface.id
+  network_security_group_id = azurerm_network_security_group.ssh_security_group.id
+}
+
+# resource "azurerm_subnet_network_security_group_association" "example" {
+#           subnet_id                 = data.azurerm_subnet.subnet.id
+#           network_security_group_id = azurerm_network_security_group.ssh_security_group.id
+# }
+
 resource "azurerm_network_interface" "webapp_interface" {
   name                = "webapp-interface-nic"
   resource_group_name = azurerm_resource_group.webapp.name
   location            = azurerm_resource_group.webapp.location
+  
 
   ip_configuration {
     name                          = "internal"
