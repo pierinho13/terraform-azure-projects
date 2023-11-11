@@ -7,6 +7,10 @@ provider "azurerm" {
   tenant_id                  = var.arm_tenant_id
 }
 
+data "azurerm_image" "nginx" {
+  name                = "nginx-as-simple-as-possible"
+  resource_group_name = "cloud-shell-storage-westeurope"
+}
 
 resource "azurerm_resource_group" "webapp" {
   name     = "webapp-resource-group"
@@ -59,12 +63,15 @@ resource "azurerm_linux_virtual_machine" "webappp_instance" {
     azurerm_network_interface.webapp_interface.id,
   ]
 
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
+#   source_image_reference {
+#     publisher = "Canonical"
+#     offer     = "UbuntuServer"
+#     sku       = "18.04-LTS"
+#     version   = "latest"
+#   }
+
+  #source image: https://github.com/pierinho13/packer-azure-simpliest/tree/main
+  source_image_id = data.azurerm_image.nginx.id
 
   os_disk {
     storage_account_type = "Standard_LRS"
