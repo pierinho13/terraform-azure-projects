@@ -1,10 +1,10 @@
 provider "azurerm" {
   features {}
   skip_provider_registration = true
-  client_id       = var.arm_client_id
-  client_secret   = var.arm_cliente_secret
-  subscription_id = var.arm_suscription_id
-  tenant_id       = var.arm_tenant_id
+  client_id                  = var.arm_client_id
+  client_secret              = var.arm_cliente_secret
+  subscription_id            = var.arm_suscription_id
+  tenant_id                  = var.arm_tenant_id
 }
 
 

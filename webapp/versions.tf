@@ -6,3 +6,12 @@ terraform {
     }
   }
 }
+
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "webapp-resource-group"
+    storage_account_name = "terraformstatepierinho18"
+    container_name       = "webappfirst"
+    key                  = "terraform.tfstate"
+  }
+}
